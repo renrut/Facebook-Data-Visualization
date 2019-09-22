@@ -6,13 +6,25 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("path", help="Path to your messenger 'inbox' folder.")
+
+parser.add_argument("--name", help="Your name so script can remove it as a participant. Default: none")
+parser.add_argument("--messages", help="Minimum number of messages to display. Default: 250", default=250, type=int)
+parser.add_argument("--maxgroup", help="Maximum group size. Large group chats tend to have a lot of messages.", default=3, type=int)
+args = parser.parse_args()
+
+
 # So it removes me
-TURNER = "Turner Strayhorn"
+NAME = args.name
 # Min messages to show up
-MIN_MSG = 500
+MIN_MSG = args.messages
+# Max number of group members (large groups have more messages).
+MAX_GROUP_SIZE = args.maxgroup
+# Path to messenger inbox folder.
+directory = args.path
+
 messages_time_dict = dict()
-directory = sys.argv[1]
-directory = sys.argv[1]
 
 # This creates a count for the number of days
 def countDays(message_time_list):
@@ -39,13 +51,14 @@ for chat_folder in os.listdir(directory):
 					messages_dict = json.load(f)
 					if len(messages_dict["messages"]) > MIN_MSG:
 						participant = [p["name"] for p in messages_dict["participants"]]
-						if TURNER in participant:
-							participant.remove(TURNER)
-						print(participant)
-						for message in messages_dict["messages"]:
-							# divide into days
-							message_time_list.append(message["timestamp_ms"]/(1000 * 60 * 60 * 24))
-						messages_time_dict[', '.join(participant)] = (message_time_list, countDays(message_time_list))
+						if NAME in participant:
+							participant.remove(NAME)
+						if len(participant) <= MAX_GROUP_SIZE:
+							print(participant)
+							for message in messages_dict["messages"]:
+								# divide into days
+								message_time_list.append(message["timestamp_ms"]/(1000 * 60 * 60 * 24))
+							messages_time_dict[', '.join(participant)] = (message_time_list, countDays(message_time_list))
 
 # List of keys for legend
 keys = []
@@ -59,4 +72,7 @@ fontP = FontProperties()
 fontP.set_size('small')
 
 plt.legend(keys, "Chattin' With Turner", prop=fontP)
+plt.legend(loc=(1.04,0))
+
+
 plt.show()
